@@ -1,5 +1,107 @@
 # FastAPI Project - Development
 
+## Getting Started
+
+### Development Environment Setup
+
+To get your local development environment configured, follow these setup steps in order from the root of the project. After this, you'll be ready to run the application.
+
+1.  **Configure Environment**:
+    Create a `.env` file for your local setup. You can copy the example file.
+    ```bash
+    cp .env.example .env
+    ```
+    Then, generate new secret keys for `SECRET_KEY`, `FIRST_SUPERUSER_PASSWORD`, and `POSTGRES_PASSWORD` and update your `.env` file. You can generate a key with:
+    ```bash
+    python -c "import secrets; print(secrets.token_urlsafe(32))"
+    ```
+
+    > **Note**: The `FIRST_SUPERUSER_PASSWORD` must be 40 characters or less, so you may need to remove a few characters if using the above Python code snippet to generate a value for it.
+
+2.  **Install Backend Dependencies**:
+    Navigate to the `backend` directory to install the Python dependencies.
+    ```bash
+    cd backend
+    uv sync
+    ```
+
+3.  **Install Git Pre-commit Hooks**:
+    While still in the `backend` directory, install the pre-commit hooks to ensure code quality.
+    ```bash
+    uv run pre-commit install
+    cd ..
+    ```
+
+4.  **Install Frontend Dependencies**:
+    Navigate to the `frontend` directory to install the Node.js dependencies. This requires `nvm` or `fnm`.
+    ```bash
+    cd frontend
+    nvm install
+    nvm use
+    npm install
+    cd ..
+    ```
+
+5.  **Generate Frontend API Client**:
+    Finally, generate the type-safe client for the frontend to communicate with the backend.
+    ```bash
+    # Make sure the script is executable
+    chmod +x ./scripts/generate-client.sh
+    # Activate backend environment and run script
+    source backend/.venv/bin/activate
+    ./scripts/generate-client.sh
+    ```
+
+### Running the Application for Development
+
+With the setup complete, you can now run the application. There are two main workflows for local development, depending on whether you prioritize a production-like environment or faster iteration with local tooling.
+
+#### Workflow 1: Fully Dockerized Development
+
+This is the simplest way to get all services running in an environment that closely mimics production.
+
+**To start all services:**
+```bash
+docker compose watch
+```
+
+**To stop all services:**
+```bash
+docker compose down
+```
+> **Note**: By default, this command preserves the database data. If you want a completely fresh start and to delete all data, use the `--volumes` (or `-v`) flag: `docker compose down -v`.
+
+#### Workflow 2: Hybrid Development (Recommended for Active Coding)
+
+For a faster development workflow with full debugger support and live reloading, run the application code directly on your machine while using Docker for backing services like the database.
+
+1.  **Start the Database and other services**:
+    In a terminal, start the services your application depends on.
+    ```bash
+    docker compose up -d db mailcatcher adminer
+    ```
+
+2.  **Run the Backend Locally**:
+    In a separate terminal, from the project root, activate the virtual environment and start the backend.
+    ```bash
+    source backend/.venv/bin/activate
+    fastapi dev backend/app/main.py
+    ```
+
+3.  **Run the Frontend Locally**:
+    In a third terminal, start the frontend development server.
+    ```bash
+    cd frontend
+    npm run dev
+    ```
+
+When you are finished, stop the Docker services:
+```bash
+docker compose down
+```
+
+Now you should be up-to-speed with the basics of development. For more in-depth information, see below.
+
 ## Docker Compose
 
 * Start the local stack with Docker Compose:
@@ -134,11 +236,23 @@ You can find a file `.pre-commit-config.yaml` with configurations at the root of
 
 After having the `pre-commit` tool installed and available, you need to "install" it in the local repository, so that it runs automatically before each commit.
 
-Using `uv`, you could do it with:
+First, install the backend dependencies, from the `backend` directory:
 
 ```bash
-❯ uv run pre-commit install
-pre-commit installed at .git/hooks/pre-commit
+cd backend
+uv sync
+```
+
+Then, still in the `backend` directory, install the pre-commit hooks:
+
+```bash
+uv run pre-commit install
+```
+
+And now you can go back to the project root directory:
+
+```bash
+cd ..
 ```
 
 Now whenever you try to commit, e.g. with:
